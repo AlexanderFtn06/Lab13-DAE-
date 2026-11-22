@@ -40,15 +40,17 @@ class Cart:
     # --- lines ---
     def add(self, sku, qty=1):
         """Add qty units of sku. qty must be an int >= 1 (InvalidQuantity) and the sku must exist
-        (UnknownProduct). qty must not exceed the product stock (OutOfStock, cart unchanged)."""
+        (UnknownProduct). What is already in the cart plus qty must not exceed the product stock
+        (OutOfStock, cart unchanged)."""
         if isinstance(qty, bool) or not isinstance(qty, int) or qty < 1:
             raise InvalidQuantity(f"qty must be an int >= 1, got {qty!r}")
         product = self._catalog.get(sku)
         if product is None:
             raise UnknownProduct(f"unknown sku: {sku!r}")
-        if qty > product.stock:
-            raise OutOfStock(f"{sku}: requested {qty}, stock is {product.stock}")
-        self._qty[sku] = self._qty.get(sku, 0) + qty
+        already = self._qty.get(sku, 0)
+        if already + qty > product.stock:
+            raise OutOfStock(f"{sku}: {already} in cart + {qty} requested, stock is {product.stock}")
+        self._qty[sku] = already + qty
 
     def remove(self, sku, qty=None):
         """qty=None removes the whole line; otherwise subtract qty and drop the line when it
