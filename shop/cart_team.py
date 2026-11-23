@@ -87,8 +87,8 @@ class Cart:
         raise NotImplementedError("TODO: apply_coupon")
 
     def subtotal(self):
-        """TODO: sum of price * qty, rounded to cents (Decimal)."""
-        raise NotImplementedError("TODO: subtotal")
+        """Sum of price * qty over every line, rounded to cents with money(). Empty cart -> 0.00."""
+        return money(sum((line.unit_price * line.qty for line in self.lines()), Decimal("0")))
 
     def discount(self):
         """TODO: percent coupon = subtotal * pct / 100 rounded half up; fixed coupon = the amount, but
