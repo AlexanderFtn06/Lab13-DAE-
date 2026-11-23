@@ -91,22 +91,43 @@ class Cart:
         return money(sum((line.unit_price * line.qty for line in self.lines()), Decimal("0")))
 
     def discount(self):
-        """TODO: percent coupon = subtotal * pct / 100 rounded half up; fixed coupon = the amount, but
-        never more than the subtotal; no coupon = Decimal('0.00')."""
-        raise NotImplementedError("TODO: discount")
+        """Coupon discount rounded to cents. No coupon -> 0.00; "percent" -> that share of the
+        subtotal; "fixed" -> the amount, never more than the subtotal."""
+        if self._coupon is None:
+            return Decimal("0.00")
+        kind, amount = COUPONS[self._coupon]
+        if kind == "percent":
+            return money(self.subtotal() * amount / 100)
+        return money(min(amount, self.subtotal()))
 
     def igv(self):
-        """TODO: 18 % of (subtotal - discount), rounded half up."""
-        raise NotImplementedError("TODO: igv")
+        """IGV_RATE (18 %) of (subtotal - discount), rounded to cents with money()."""
+        return money((self.subtotal() - self.discount()) * IGV_RATE)
 
     def total(self):
-        """TODO: (subtotal - discount) + igv."""
-        raise NotImplementedError("TODO: total")
+        """(subtotal - discount) + igv, adding the already rounded parts (never a raw total)."""
+        return self.subtotal() - self.discount() + self.igv()
 
     def summary(self):
-        """TODO: the dict the API returns. Keys: lines (list of dicts with sku, name, unit_price,
-        qty, line_total as 2-decimal strings), coupon, subtotal, discount, igv, total (strings via fmt)."""
-        raise NotImplementedError("TODO: summary")
+        """The dict the API returns: one entry per line with unit_price and line_total as 2-decimal
+        strings, plus coupon and the four money totals (also 2-decimal strings via fmt)."""
+        return {
+            "lines": [
+                {
+                    "sku": line.sku,
+                    "name": line.name,
+                    "unit_price": fmt(line.unit_price),
+                    "qty": line.qty,
+                    "line_total": fmt(line.total),
+                }
+                for line in self.lines()
+            ],
+            "coupon": self._coupon,
+            "subtotal": fmt(self.subtotal()),
+            "discount": fmt(self.discount()),
+            "igv": fmt(self.igv()),
+            "total": fmt(self.total()),
+        }
 
     # --- checkout ---
     def checkout(self):
