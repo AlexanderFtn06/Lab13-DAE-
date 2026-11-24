@@ -134,6 +134,8 @@ class Cart:
 
 
 def add_from_payload(cart, payload):
+    """Turn the untrusted JSON body into cart.add(sku, qty). The body must be a dict with a
+    string "sku"; qty defaults to 1."""
     if not isinstance(payload, dict) or not isinstance(payload.get("sku"), str):
         raise CartError("Falta el campo «sku»")
-    cart.add(payload["sku"], payload.get("qty", 1), payload.get("price"))
+    cart.add(payload["sku"], payload.get("qty", 1))
