@@ -13,13 +13,6 @@ from shop.domain import (
     money,
 )
 
-IGV = 0.18
-
-
-def _money(value):
-    return Decimal(str(round(value, 2)))
-
-
 def _check_qty(qty):
     if isinstance(qty, bool) or not isinstance(qty, int) or qty < 1:
         raise InvalidQuantity(f"Cantidad no válida: {qty!r}")
@@ -84,20 +77,6 @@ class Cart:
         if code not in COUPONS:
             raise InvalidCoupon(f"Cupón desconocido: {code!r}")
         self._coupons = [code]
-
-    def _subtotal(self):
-        return sum(float(l.unit_price) * l.qty for l in self.lines())
-
-    def _discount(self):
-        subtotal = self._subtotal()
-        total_discount = 0.0
-        for code in self._coupons:
-            kind, amount = COUPONS[code]
-            if kind == "percent":
-                total_discount += subtotal * float(amount) / 100
-            else:
-                total_discount += min(float(amount), subtotal)
-        return total_discount
 
     def subtotal(self):
         return money(sum((l.unit_price * l.qty for l in self.lines()), Decimal("0")))
