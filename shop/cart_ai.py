@@ -100,7 +100,7 @@ class Cart:
         return total_discount
 
     def subtotal(self):
-        return _money(self._subtotal())
+        return money(sum((l.unit_price * l.qty for l in self.lines()), Decimal("0")))
 
     def discount(self):
         if not self._coupons:
