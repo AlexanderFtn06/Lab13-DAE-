@@ -81,7 +81,7 @@ class Cart:
         code = (code or "").strip().upper()
         if code not in COUPONS:
             raise InvalidCoupon(f"Cupón desconocido: {code!r}")
-        self._coupons.append(code)
+        self._coupons = [code]
 
     def _subtotal(self):
         return sum(float(l.unit_price) * l.qty for l in self.lines())
