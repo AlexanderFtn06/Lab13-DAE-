@@ -103,7 +103,12 @@ class Cart:
         return _money(self._subtotal())
 
     def discount(self):
-        return _money(self._discount())
+        if not self._coupons:
+            return Decimal("0.00")
+        kind, amount = COUPONS[self._coupons[-1]]
+        if kind == "percent":
+            return money(self.subtotal() * amount / 100)
+        return money(min(amount, self.subtotal()))
 
     def igv(self):
         return money((self.subtotal() - self.discount()) * IGV_RATE)
