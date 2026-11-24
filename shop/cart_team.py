@@ -82,9 +82,14 @@ class Cart:
 
     # --- coupon and totals ---
     def apply_coupon(self, code):
-        """TODO: code without spaces and in upper case; unknown -> InvalidCoupon. One coupon per cart:
-        applying again (the same or another) REPLACES it."""
-        raise NotImplementedError("TODO: apply_coupon")
+        """Trim and upper-case the code; a non-string or unknown code raises InvalidCoupon and keeps
+        the current coupon. A valid coupon REPLACES the previous one (it never accumulates)."""
+        if not isinstance(code, str):
+            raise InvalidCoupon(f"coupon code must be a string, got {code!r}")
+        normalized = code.strip().upper()
+        if normalized not in COUPONS:
+            raise InvalidCoupon(f"unknown coupon: {code!r}")
+        self._coupon = normalized
 
     def subtotal(self):
         """Sum of price * qty over every line, rounded to cents with money(). Empty cart -> 0.00."""
@@ -148,7 +153,12 @@ class Cart:
 
 
 def add_from_payload(cart, payload):
-    """TODO: translate the JSON body of POST /api/cart/items/ ({"sku": ..., "qty": ...}) into a cart.add
-    call. The body is untrusted: if it is not a dict with a string «sku», raise CartError. The price is
-    NOT part of the contract: the catalog is the only source of prices."""
-    raise NotImplementedError("TODO: add_from_payload")
+    """Translate the untrusted JSON body of POST /api/cart/items/ into cart.add(sku, qty).
+    Not a dict, a missing "sku" or a non-string "sku" -> CartError. qty defaults to 1 and is
+    validated by add; every other key (including "price") is ignored: the catalog sets the price."""
+    if not isinstance(payload, dict):
+        raise CartError("the body must be a JSON object")
+    sku = payload.get("sku")
+    if not isinstance(sku, str):
+        raise CartError("the body must have a string 'sku'")
+    cart.add(sku, payload.get("qty", 1))
