@@ -47,9 +47,10 @@ class Cart:
         product = self._catalog.get(sku)
         if product is None:
             raise UnknownProduct(f"No existe el producto {sku!r}")
-        if qty > product.stock:
+        already = self._qty.get(sku, 0)
+        if already + qty > product.stock:
             raise OutOfStock(f"{sku}: pides {qty} y quedan {product.stock}")
-        self._qty[sku] = self._qty.get(sku, 0) + qty
+        self._qty[sku] = already + qty
         self._prices[sku] = product.price
 
     def remove(self, sku, qty=None):
