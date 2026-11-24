@@ -127,6 +127,9 @@ class Cart:
     def checkout(self):
         if not self._qty:
             raise CartError("El carrito está vacío")
+        for sku, qty in self._qty.items():
+            if qty > self._catalog[sku].stock:
+                raise OutOfStock(f"{sku}: hay {qty} en el carrito y quedan {self._catalog[sku].stock}")
         order = self.summary()
         for sku, qty in self._qty.items():
             self._catalog[sku].stock -= qty
